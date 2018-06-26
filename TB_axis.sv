@@ -1,4 +1,4 @@
-`timescale 1us/1us
+`timescale 1ns/1ps
 
 module TB_axis_m ();
 
@@ -15,10 +15,12 @@ logic [31:0] tdata;
 wire pc_asserted ;
 wire [31 : 0] pc_status ;
 
+logic [31:0] data;
 
 assign cntLimit=6'd40;
 
 axis_m inst_axis_m (.rst(rst), .aclk(aclk),
+					.data(data),
 					.send(send),
 					.tready(tready), 
                     .tvalid(tvalid),.tlast(tlast),.tdata(tdata),
@@ -38,7 +40,7 @@ axis_m inst_axis_m (.rst(rst), .aclk(aclk),
 ); */					
 
 initial 
- forever #5 aclk++;
+ forever #2 aclk++;
 
 initial
 begin
@@ -48,7 +50,7 @@ end
 
 initial
 begin
-##20    send = 1;
+##10    send = 1;
 ##1    send = 0;
 //##2    send <= 0;
 end
@@ -57,10 +59,16 @@ end
 initial
 begin
     tready =0;
-    ##50 tready = 1;
+    ##15 tready = 1;
     ##1 tready = 0 ;
-    ##1 tready = 1 ;
+    ##10 tready = 1 ;
 end
 
+initial
+begin
+data <=32'haaaa_bbbb;
+##90
+data <=32'hcccc_dddd;
+end
 
 endmodule

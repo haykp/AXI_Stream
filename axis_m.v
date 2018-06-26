@@ -9,8 +9,9 @@ module axis_m ( input rst, aclk,
 			  input [31:0] data, 
 			  input send,
 			  input tready, 
-              output reg tvalid, tlast, 
-			  output [31:0] tdata,
+              output reg tvalid,
+			  output tlast, 
+			  output reg [31:0] tdata,
 			 
 			  output reg finish
 			);
@@ -25,14 +26,14 @@ always @ (posedge send or posedge rst)
 		
 reg send_pulse_1d,send_pulse_2d;
 // just delay the send signal for 1 clock
-always @ (posedge clk)
+always @ (posedge aclk)
     if (rst)
 		{send_pulse_1d,send_pulse_2d } <= 2'b00;
 	else 
 		{send_pulse_1d,send_pulse_2d } <= {send, send_pulse_1d};
 	
 // tdata
-always @ (posedge clk)
+always @ (posedge aclk)
     if (rst)
         tdata <= 1'b0;	
 	else
@@ -50,14 +51,14 @@ assign handshake  = tvalid & tready;
 	
 // tvalid
 // as soon as the fifo becomes no empty the tvalid goes high
-always @ (posedge clk)
+always @ (posedge aclk)
     if (rst)
         tvalid <= 1'b0;
     else
 		if (handshake)
 			tvalid <= 1'b0;
 		else
-			if (~send_pulse_1d )
+			if (send_pulse_1d )
 				tvalid <= 1'b1;
 			else 
 				tvalid <= tvalid;
@@ -67,11 +68,11 @@ always @ (posedge clk)
 assign tlast = tvalid;
 
 // finish
-always @ (posedge clk)
+always @ (posedge aclk)
     if (rst)
         finish <= 1'b0;
 	else
-		if (start)
+		if (send)
 			finish <= 1'b0;
 		else
 			if (handshake)
