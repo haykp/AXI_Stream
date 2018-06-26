@@ -1,0 +1,83 @@
+// Simple AXI-Stream Master
+// Takes the data and sends it through the AXIS interface
+// When send posedge happens, sends the data
+
+
+`timescale 1us/1us
+
+module axis_m ( input rst, aclk, 
+			  input [31:0] data, 
+			  input send,
+			  input tready, 
+              output reg tvalid, tlast, 
+			  output [31:0] tdata,
+			 
+			  output reg finish
+			);
+
+
+reg [31:0] data_buf; // buffer to keep the send data from change
+always @ (posedge send or posedge rst)
+	if (rst)
+		data_buf <= 0;
+	else
+		data_buf <= data;
+		
+reg send_pulse_1d,send_pulse_2d;
+// just delay the send signal for 1 clock
+always @ (posedge clk)
+    if (rst)
+		{send_pulse_1d,send_pulse_2d } <= 2'b00;
+	else 
+		{send_pulse_1d,send_pulse_2d } <= {send, send_pulse_1d};
+	
+// tdata
+always @ (posedge clk)
+    if (rst)
+        tdata <= 1'b0;	
+	else
+		if (handshake)
+			tdata <= 0;
+		else if (send)
+				tdata <= data;
+			else
+				tdata <= tdata;
+			
+	
+// handshake happened between master and slave
+wire handshake;	
+assign handshake  = tvalid & tready;
+	
+// tvalid
+// as soon as the fifo becomes no empty the tvalid goes high
+always @ (posedge clk)
+    if (rst)
+        tvalid <= 1'b0;
+    else
+		if (handshake)
+			tvalid <= 1'b0;
+		else
+			if (~send_pulse_1d )
+				tvalid <= 1'b1;
+			else 
+				tvalid <= tvalid;
+		
+// tlast
+// same behavioral as tvalid
+assign tlast = tvalid;
+
+// finish
+always @ (posedge clk)
+    if (rst)
+        finish <= 1'b0;
+	else
+		if (start)
+			finish <= 1'b0;
+		else
+			if (handshake)
+				finish <= 1'b1;
+			else
+				finish <= finish;
+	
+
+endmodule
