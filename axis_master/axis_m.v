@@ -5,7 +5,7 @@
 
 `timescale 1us/1us
 
-module axis_m ( input rst, aclk, 
+module axis_m ( input areset_n, aclk, 
 			  input [31:0] data, 
 			  input send,
 			  input tready, 
@@ -18,8 +18,8 @@ module axis_m ( input rst, aclk,
 
 
 reg [31:0] data_buf; // buffer to keep the send data from change
-always @ (posedge send or posedge rst)
-	if (rst)
+always @ (posedge send or negedge areset_n)
+	if (~areset_n)
 		data_buf <= 0;
 	else
 		data_buf <= data;
@@ -27,14 +27,14 @@ always @ (posedge send or posedge rst)
 reg send_pulse_1d,send_pulse_2d;
 // just delay the send signal for 1 clock
 always @ (posedge aclk)
-    if (rst)
+    if (~areset_n)
 		{send_pulse_1d,send_pulse_2d } <= 2'b00;
 	else 
 		{send_pulse_1d,send_pulse_2d } <= {send, send_pulse_1d};
 	
 // tdata
 always @ (posedge aclk)
-    if (rst)
+    if (~areset_n)
         tdata <= 1'b0;	
 	else
 		if (handshake)
@@ -52,7 +52,7 @@ assign handshake  = tvalid & tready;
 // tvalid
 // as soon as the fifo becomes no empty the tvalid goes high
 always @ (posedge aclk)
-    if (rst)
+    if (~areset_n)
         tvalid <= 1'b0;
     else
 		if (handshake)
@@ -69,7 +69,7 @@ assign tlast = tvalid;
 
 // finish
 always @ (posedge aclk)
-    if (rst)
+    if (~areset_n)
         finish <= 1'b0;
 	else
 		if (send)

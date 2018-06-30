@@ -5,7 +5,7 @@ module TB_axis_m ();
 default clocking cb @(posedge aclk);
 endclocking
 
-bit aclk, rst, send;
+bit aclk, areset_n, send;
 logic finish;
 
 logic tready; 
@@ -19,7 +19,7 @@ logic [31:0] data;
 
 assign cntLimit=6'd40;
 
-axis_m inst_axis_m (.rst(rst), .aclk(aclk),
+axis_m inst_axis_m (.areset_n(areset_n), .aclk(aclk),
 					.data(data),
 					.send(send),
 					.tready(tready), 
@@ -31,7 +31,7 @@ axis_m inst_axis_m (.rst(rst), .aclk(aclk),
 
 /* axis_protocol_checker_0 inst_axiCheck (
   .aclk(aclk),                      // input wire aclk
-  .aresetn(~rst),                // input wire aresetn
+  .aresetn(~areset_n),                // input wire aresetn
   .pc_axis_tvalid(tvalid),  // input wire pc_axis_tvalid
   .pc_axis_tready(tready),  // input wire pc_axis_tready
   .pc_axis_tdata({5'd0,tdata}),    // input wire [7 : 0] pc_axis_tdata
@@ -44,8 +44,8 @@ initial
 
 initial
 begin
-    rst <= 1;
-    ##4 rst <= 0;
+    areset_n <= 0;
+    ##4 areset_n <= 1;
 end
 
 initial
